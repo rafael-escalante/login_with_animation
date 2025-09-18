@@ -10,9 +10,19 @@ class LoginScreen extends StatefulWidget {
 
 class _MyWidgetState extends State<LoginScreen> {
   bool _obscurePassword = true; // Estado para mostrar/ocultar contraseña
+
+  //cerebro de la logica de las animaciones
+  StateMachineController? controller;
+  //State Machine Input
+  SMIBool? isChecking; //Activa el modo chismoso
+  SMIBool? isHandsUp; //Se tapa los ojos
+  SMITrigger? trigSuccess; //se emociona
+  SMITrigger? trigFail; //Se pone sad
+
   @override
   Widget build(BuildContext context) {
     //para obtener el tamaño de la pantalla del disp
+    //consulta el tamaño de la pantalla
     final Size size = MediaQuery.of(context).size;
     return Scaffold(
       body: SafeArea(
@@ -25,13 +35,35 @@ class _MyWidgetState extends State<LoginScreen> {
             SizedBox(
                 width: size.width,
                 height: 200,
-                child: RiveAnimation.asset("animated_login_character.riv")),
+                child: RiveAnimation.asset("animated_login_character.riv",
+                    stateMachines: ["Login Machine"],
+                    //Al iniciarse
+                    onInit: (artboard) {
+                  controller = StateMachineController.fromArtboard(
+                      artboard, "Login Machine");
+                  //verificar que inicio bien
+                  if (controller == null) return;
+                  artboard.addController(controller!);
+                  isChecking = controller!.findSMI("isChecking");
+                  isHandsUp = controller!.findSMI("isHandsUp");
+                  trigSuccess = controller!.findSMI("trigSuccess");
+                  trigFail = controller!.findSMI("trigFail");
+                })),
             //Espacio entre el oso y el texto email
             const SizedBox(height: 15),
             //campo de texto de email
             SizedBox(
               width: 370,
               child: TextField(
+                  onChanged: (value) {
+                    if (isHandsUp != null) {
+                      //No tapar los ojos al escribir un mail
+                      isHandsUp!.change(false);
+                    }
+                    if (isChecking == null) return;
+                    //Activa el modo chismoso
+                    isChecking!.change(true);
+                  },
                   //para que aparezca @ en moviles
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
@@ -46,6 +78,15 @@ class _MyWidgetState extends State<LoginScreen> {
             SizedBox(
               width: 370,
               child: TextField(
+                  onChanged: (value) {
+                    if (isChecking != null) {
+                      //No tapar los ojos al escribir un mail
+                      isHandsUp!.change(false);
+                    }
+                    if (isHandsUp == null) return;
+                    //Activa el modo chismoso
+                    isHandsUp!.change(true);
+                  },
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                       hintText: "Password",
@@ -63,6 +104,52 @@ class _MyWidgetState extends State<LoginScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ))),
+            ),
+            const SizedBox(height: 10),
+            //Texto de olvide la contraseña
+            SizedBox(
+              width: size.width,
+              child: const Text("¿Forgot your password?",
+                  //alinear a la derecha+
+                  textAlign: TextAlign.right,
+                  style: TextStyle(decoration: TextDecoration.underline)),
+            ),
+            //boton login
+            const SizedBox(height: 10),
+            //boton estilo android
+            MaterialButton(
+                minWidth: size.width,
+                height: 50,
+                color: Colors.purple,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                onPressed: () {},
+                //TO DO
+                child: Text(
+                  "login",
+                  style: TextStyle(color: Colors.white),
+                )),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: size.width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Don't you have a account?",
+                  ),
+                  TextButton(
+                      onPressed: () {},
+                      child: const Text("Register",
+                          style: TextStyle(
+                            color: Colors.black,
+                            //en negritas
+                            fontWeight: FontWeight.bold,
+                            //subrayado
+                            decoration: TextDecoration.underline,
+                          )))
+                ],
+              ),
             )
           ],
         ),

@@ -19,6 +19,25 @@ class _MyWidgetState extends State<LoginScreen> {
   SMITrigger? trigSuccess; //se emociona
   SMITrigger? trigFail; //Se pone sad
 
+  //1) FocusNode
+  final emailFocus = FocusNode();
+  final passFocus = FocusNode();
+
+  //2)Listeners (Oyentes/Chismosos)
+  @override
+  void initState() {
+    super.initState();
+    emailFocus.addListener(() {
+      if (emailFocus.hasFocus) {
+        isHandsUp?.change(false);
+      }
+    });
+    passFocus.addListener(() {
+      //Manos arriba en password
+      isHandsUp?.change(passFocus.hasFocus);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     //para obtener el tamaño de la pantalla del disp
@@ -55,10 +74,12 @@ class _MyWidgetState extends State<LoginScreen> {
             SizedBox(
               width: 370,
               child: TextField(
+                  //3)Asignas el FocusNode al TextField
+                  focusNode: emailFocus,
                   onChanged: (value) {
                     if (isHandsUp != null) {
                       //No tapar los ojos al escribir un mail
-                      isHandsUp!.change(false);
+                      //isHandsUp!.change(false);
                     }
                     if (isChecking == null) return;
                     //Activa el modo chismoso
@@ -78,10 +99,12 @@ class _MyWidgetState extends State<LoginScreen> {
             SizedBox(
               width: 370,
               child: TextField(
+                  //3)Asigna el FocusNode
+                  focusNode: passFocus,
                   onChanged: (value) {
                     if (isChecking != null) {
                       //No tapar los ojos al escribir un mail
-                      isHandsUp!.change(false);
+                      //isHandsUp!.change(false);
                     }
                     if (isHandsUp == null) return;
                     //Activa el modo chismoso
@@ -155,5 +178,13 @@ class _MyWidgetState extends State<LoginScreen> {
         ),
       )),
     );
+  }
+
+//liberacion de recursos/ limpiez DE FOCOS
+  @override
+  void dispose() {
+    emailFocus.dispose();
+    passFocus.dispose();
+    super.dispose();
   }
 }

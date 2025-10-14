@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
+//3.1 Importar libreria para Timer
+import "dart:async";
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,10 +20,15 @@ class _MyWidgetState extends State<LoginScreen> {
   SMIBool? isHandsUp; //Se tapa los ojos
   SMITrigger? trigSuccess; //se emociona
   SMITrigger? trigFail; //Se pone sad
+  //2.1 variable para recorrido de la mirada
+  SMINumber? numLook; // 0..80 en tu asset
 
   //1) FocusNode
   final emailFocus = FocusNode();
   final passFocus = FocusNode();
+
+  //3.2 Timer para detener la mirada al dejar de teclear
+  Timer? _typingDebounce;
 
   //2)Listeners (Oyentes/Chismosos)
   @override
@@ -29,6 +36,9 @@ class _MyWidgetState extends State<LoginScreen> {
     super.initState();
     emailFocus.addListener(() {
       if (emailFocus.hasFocus) {
+        isHandsUp?.change(false);
+        //2.2 Mirada neutral al enfocar email
+        numLook?.value = 50.0;
         isHandsUp?.change(false);
       }
     });
@@ -67,6 +77,8 @@ class _MyWidgetState extends State<LoginScreen> {
                   isHandsUp = controller!.findSMI("isHandsUp");
                   trigSuccess = controller!.findSMI("trigSuccess");
                   trigFail = controller!.findSMI("trigFail");
+                  //2.3 Enlazar la variable con la animación
+                  numLook = controller!.findSMI("numLook");
                 })),
             //Espacio entre el oso y el texto email
             const SizedBox(height: 15),
@@ -78,8 +90,26 @@ class _MyWidgetState extends State<LoginScreen> {
                   focusNode: emailFocus,
                   onChanged: (value) {
                     if (isHandsUp != null) {
-                      //No tapar los ojos al escribir un mail
-                      //isHandsUp!.change(false);
+                      //2.4 implementando numLook
+                      //"Estoy escribiendo"
+                      isChecking!.change(true);
+
+                      //Ajuste de limites de 0 a 100
+                      //80 es una medida de calibracion
+                      final look =
+                          (value.length / 80.0 * 100.0).clamp(0.0, 100.0);
+                      numLook?.value = look;
+
+                      //3.3 Debounce: si vuelve a teclear, reinicia el contador
+                      _typingDebounce
+                          ?.cancel(); //cancela cualquier timer existente
+                      _typingDebounce = Timer(const Duration(seconds: 2), () {
+                        if (!mounted) {
+                          return; //si la pantalla se cierra
+                        }
+                        //mirada neutra
+                        isChecking?.change(false);
+                      });
                     }
                     if (isChecking == null) return;
                     //Activa el modo chismoso
@@ -180,11 +210,12 @@ class _MyWidgetState extends State<LoginScreen> {
     );
   }
 
-//liberacion de recursos/ limpiez DE FOCOS
+// 1.4 liberacion de recursos/ limpiez DE FOCOS
   @override
   void dispose() {
     emailFocus.dispose();
     passFocus.dispose();
+    _typingDebounce?.cancel();
     super.dispose();
   }
 }

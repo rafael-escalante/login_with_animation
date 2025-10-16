@@ -30,7 +30,62 @@ class _MyWidgetState extends State<LoginScreen> {
   //3.2 Timer para detener la mirada al dejar de teclear
   Timer? _typingDebounce;
 
-  //2)Listeners (Oyentes/Chismosos)
+  //4.1 Controllers
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
+
+  //4.2 Errores para mostrar en la UI
+  String? emailError;
+  String? passError;
+
+  //4.3 Validadores
+  bool isValidEmail(String email) {
+    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return re.hasMatch(email);
+  }
+
+  bool isValidPassword(String pass) {
+    // mínimo 8, una mayúscula, una minúscula, un dígito y un especial
+    final re = RegExp(
+      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
+    );
+    return re.hasMatch(pass);
+  }
+
+  //4.4 Accion al botón de iniciar sesión
+  void _onLogin() {
+    final email = emailCtrl.text.trim();
+    final pass = passCtrl.text;
+
+    //Recalcular errores
+
+    final eError = isValidEmail(email) ? null : "Email inválido";
+    final pError = isValidPassword(pass)
+        ? null
+        : "Mínimo 8 caracteres, 1 mayúscula, 1 minuscula, 1 numero y 1 caracter especial";
+
+    //4.5para avisar que hubo un cambio
+    setState(() {
+      emailError = eError;
+      passError = pError;
+    });
+
+    //4.6 Cerrar el teclado y bajar
+    FocusScope.of(context).unfocus();
+    _typingDebounce?.cancel();
+    isChecking?.change(false);
+    isHandsUp?.change(false);
+    numLook?.value = 50.0; //Mirada neutral al liberar el teclado
+
+    // 4,7  Activar triggers
+    if (eError == null && pError == null) {
+      trigSuccess?.fire();
+    } else {
+      trigFail?.fire();
+    }
+  }
+
+  //2.1)Listeners (Oyentes/Chismosos)
   @override
   void initState() {
     super.initState();
@@ -88,29 +143,30 @@ class _MyWidgetState extends State<LoginScreen> {
               child: TextField(
                   //3)Asignas el FocusNode al TextField
                   focusNode: emailFocus,
+                  //4.8 Enlazar controller al TextField
+                  controller: emailCtrl,
                   onChanged: (value) {
-                    if (isHandsUp != null) {
-                      //2.4 implementando numLook
-                      //"Estoy escribiendo"
-                      isChecking!.change(true);
+                    //2.4 implementando numLook
+                    //"Estoy escribiendo"
+                    isChecking!.change(true);
 
-                      //Ajuste de limites de 0 a 100
-                      //80 es una medida de calibracion
-                      final look =
-                          (value.length / 80.0 * 100.0).clamp(0.0, 100.0);
-                      numLook?.value = look;
+                    //Ajuste de limites de 0 a 100
+                    //80 es una medida de calibracion
+                    final look =
+                        (value.length / 80.0 * 100.0).clamp(0.0, 100.0);
+                    numLook?.value = look;
 
-                      //3.3 Debounce: si vuelve a teclear, reinicia el contador
-                      _typingDebounce
-                          ?.cancel(); //cancela cualquier timer existente
-                      _typingDebounce = Timer(const Duration(seconds: 2), () {
-                        if (!mounted) {
-                          return; //si la pantalla se cierra
-                        }
-                        //mirada neutra
-                        isChecking?.change(false);
-                      });
-                    }
+                    //3.3 Debounce: si vuelve a teclear, reinicia el contador
+                    _typingDebounce
+                        ?.cancel(); //cancela cualquier timer existente
+                    _typingDebounce = Timer(const Duration(seconds: 2), () {
+                      if (!mounted) {
+                        return; //si la pantalla se cierra
+                      }
+                      //mirada neutra
+                      isChecking?.change(false);
+                    });
+
                     if (isChecking == null) return;
                     //Activa el modo chismoso
                     isChecking!.change(true);
@@ -118,6 +174,8 @@ class _MyWidgetState extends State<LoginScreen> {
                   //para que aparezca @ en moviles
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
+                      //4.9 Mostrar el texto del error
+                      errorText: emailError,
                       hintText: "Email",
                       prefixIcon: const Icon(Icons.mail),
                       border: OutlineInputBorder(
@@ -131,6 +189,8 @@ class _MyWidgetState extends State<LoginScreen> {
               child: TextField(
                   //3)Asigna el FocusNode
                   focusNode: passFocus,
+                  //4.8 Enlazar controller al TextField
+                  controller: passCtrl,
                   onChanged: (value) {
                     if (isChecking != null) {
                       //No tapar los ojos al escribir un mail
@@ -142,6 +202,7 @@ class _MyWidgetState extends State<LoginScreen> {
                   },
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
+                      errorText: passError,
                       hintText: "Password",
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
@@ -176,7 +237,8 @@ class _MyWidgetState extends State<LoginScreen> {
                 color: Colors.purple,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
-                onPressed: () {},
+                //4.10 Llamar funcion de login
+                onPressed: _onLogin,
                 //TO DO
                 child: Text(
                   "login",
@@ -213,6 +275,9 @@ class _MyWidgetState extends State<LoginScreen> {
 // 1.4 liberacion de recursos/ limpiez DE FOCOS
   @override
   void dispose() {
+    //4.11 Limpieza de los controllers
+    emailCtrl.dispose();
+    passCtrl.dispose();
     emailFocus.dispose();
     passFocus.dispose();
     _typingDebounce?.cancel();

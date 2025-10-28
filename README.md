@@ -40,15 +40,12 @@ This section details the essential steps taken to construct the application, int
 3.  **Input Handling & State Management:** Form fields (email and password) were set up using `TextEditingController`s. The `onChanged` and `onSubmitted` callbacks were used to grab user input.
 4.  **Connecting Flutter to Rive:** Key **State Machine Inputs** (e.g., `isEmailValid` boolean, `triggerLogin` trigger) were retrieved from the Rive controller. When a user action occurs (e.g., validation fails or the login button is pressed), the corresponding Rive input is set or triggered, making the animation react.
 
-[**Insert Screenshots Here**]
-* 
-* [Image showing the input validation logic.]
 
 ## 🎬 Demo
 
 A GIF demonstrating the complete functionality, including the interaction with the input fields and the resulting Rive state changes (e.g., successful or failed login animation), should be placed here.
 
-[**Insert GIF Here**]
+![Login Screen Demo](assets/GIF GAXIOLA 2.gif)
 
 ## 🧠 Conclusions and Reflections
 

@@ -45,7 +45,7 @@ This section details the essential steps taken to construct the application, int
 
 A GIF demonstrating the complete functionality, including the interaction with the input fields and the resulting Rive state changes (e.g., successful or failed login animation), should be placed here.
 
-![Login Screen Demo](assets/GIF GAXIOLA 2.gif)
+![Login Screen Demo](assets/GIFGAXIOLA2.gif)
 
 ## 🧠 Conclusions and Reflections
 
